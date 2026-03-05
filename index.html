@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Clock</title>
+<style>
+  :root{
+    --bg:#222428;
+    --ring:#9aa0a6;
+    --ring-dim: rgba(154,160,166,0.18);
+    --accent:#ff6b3c;
+    --muted:#9aa0a6;
+    --white:#f5f5f7;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: "Poppins", "Segoe UI", Roboto, sans-serif;
+    background:var(--bg);
+    color:var(--white);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  .page {
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:28px;
+  }
+
+  h1{
+    font-weight:700;
+    letter-spacing:0.5px;
+    margin:0;
+    font-size:36px;
+    color:var(--white);
+    text-align:center;
+  }
+
+  .clock-wrap{
+    position:relative;
+    width:540px;
+    max-width:92vw;
+    aspect-ratio:1/1;
+    display:grid;
+    place-items:center;
+  }
+
+  .rings-svg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .center {
+    position:absolute;
+    width:170px;
+    height:170px;
+    border-radius:50%;
+    background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(255,255,255,0.02));
+    display:grid;
+    place-items:center;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6), inset 0 -6px 12px rgba(255,255,255,0.02);
+    z-index:5;
+  }
+
+  .hand{
+    position:absolute;
+    left:50%;
+    bottom:50%;
+    transform-origin: bottom center;
+    transform: translateX(-50%) rotate(0deg);
+    border-radius:4px;
+    z-index:7;
+    box-shadow:0 6px 12px rgba(0,0,0,0.6);
+  }
+  #hours{ width:10px; height:56px; background:var(--white); border-radius:6px; bottom:50%; }
+  #minutes{ width:7px; height:78px; background:#dcdede; border-radius:6px; bottom:50%; }
+  #seconds{ width:3px; height:90px; background:var(--accent); bottom:50%; border-radius:4px; }
+
+  .label-ring{
+    position:absolute;
+    inset:0;
+    display:block;
+    pointer-events:none;
+    z-index:6;
+  }
+  .label-ring .item{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform-origin: 0 0;
+    font-size:12px;
+    color:var(--muted);
+    pointer-events:auto;
+    user-select:none;
+    white-space:nowrap;
+    font-weight:600;
+    letter-spacing:0.6px;
+  }
+
+  .date .item{ font-size:11px; font-weight:500; color:rgba(255,255,255,0.65); }
+  .month .item{ font-size:12px; font-weight:700; text-transform:uppercase; color:rgba(255,255,255,0.6); }
+  .day .item{ font-size:11px; font-weight:700; color:rgba(255,255,255,0.6); letter-spacing:1px; }
+
+  .highlight-month{ color:#62bafc !important; }
+  .highlight-day{ color:#6ef3a1 !important; }
+  .highlight-date{ color:var(--accent) !important; font-weight:800; }
+
+  .time-label{
+    position:absolute;
+    top:62%;
+    transform:translateY(-50%);
+    text-align:center;
+    color:rgba(255,255,255,0.85);
+    font-weight:700;
+    letter-spacing:1px;
+    z-index:8;
+    font-size:16px;
+  }
+
+  @media (max-width:520px){
+    .center{ width:140px; height:140px; }
+    #hours{ height:48px }
+    #minutes{ height:64px }
+    #seconds{ height:78px }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="clock-wrap" id="clockWrap">
+
+      <svg class="rings-svg" viewBox="0 0 540 540" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000" flood-opacity="0.6"/>
+          </filter>
+        </defs>
+
+        <g transform="translate(270,270)">
+          <circle cx="0" cy="0" r="200" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="38"></circle>
+
+          <circle cx="0" cy="0" r="180" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="18"
+                  stroke-dasharray="450 700" stroke-dashoffset="80" transform="rotate(-18)"></circle>
+
+          <circle cx="0" cy="0" r="150" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="18"
+                  stroke-dasharray="440 700" stroke-dashoffset="40" transform="rotate(-40)"></circle>
+
+          <circle cx="0" cy="0" r="120" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="18"
+                  stroke-dasharray="430 700" stroke-dashoffset="0" transform="rotate(-64)"></circle>
+        </g>
+      </svg>
+
+      <div class="label-ring day" id="dayRing"></div>
+      <div class="label-ring month" id="monthRing"></div>
+      <div class="label-ring date" id="dateRing"></div>
+
+      <div class="center">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(180deg,#111 0,#2b2b2d 100%);"></div>
+      </div>
+
+      <div id="hours" class="hand"></div>
+      <div id="minutes" class="hand"></div>
+      <div id="seconds" class="hand"></div>
+
+      <div class="time-label" id="timeLabel"></div>
+
+    </div>
+  </div>
+
+<script>
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const dates = Array.from({length:31}, (_,i) => (i+1).toString());
+
+  function createRing(containerId, items, radius) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+    const wrap = document.getElementById("clockWrap");
+    const rect = wrap.getBoundingClientRect();
+    const cx = rect.width/2;
+    const cy = rect.height/2;
+
+    const angleStep = 360 / items.length;
+    items.forEach((label, i) => {
+      const el = document.createElement("div");
+      el.className = "item";
+      el.textContent = label;
+      const angle = i * angleStep - 90;
+      const r = radius * (rect.width / 540);
+      el.style.transform = `rotate(${angle}deg) translate(${r}px) rotate(${-angle}deg) translate(-50%,-50%)`;
+      el.style.left = `${cx}px`;
+      el.style.top = `${cy}px`;
+      container.appendChild(el);
+    });
+  }
+
+  function highlightCurrent(date){
+    document.querySelectorAll("#monthRing .item").forEach(x => x.classList.remove("highlight-month"));
+    document.querySelectorAll("#dayRing .item").forEach(x => x.classList.remove("highlight-day"));
+    document.querySelectorAll("#dateRing .item").forEach(x => x.classList.remove("highlight-date"));
+
+    const monthIndex = date.getMonth();
+    const dayIndex = date.getDay();
+    const dateIndex = date.getDate() - 1;
+
+    const monthsEls = document.querySelectorAll("#monthRing .item");
+    if(monthsEls[monthIndex]) monthsEls[monthIndex].classList.add("highlight-month");
+
+    const daysEls = document.querySelectorAll("#dayRing .item");
+    if(daysEls[dayIndex]) daysEls[dayIndex].classList.add("highlight-day");
+
+    const dateEls = document.querySelectorAll("#dateRing .item");
+    if(dateEls[dateIndex]) dateEls[dateIndex].classList.add("highlight-date");
+  }
+
+  // ✅ UPDATED ORDER: DAY → MONTH → DATE
+  function drawRings(){
+    createRing("dayRing", days, 200);
+    createRing("monthRing", months, 140);
+    createRing("dateRing", dates, 90);
+  }
+
+  window.addEventListener("resize", drawRings);
+  drawRings();
+
+  function clockRotation(){
+    const hoursEl = document.getElementById("hours");
+    const minutesEl = document.getElementById("minutes");
+    const secondsEl = document.getElementById("seconds");
+    const timeLabel = document.getElementById("timeLabel");
+
+    function tick(){
+      const now = new Date();
+      const s = now.getSeconds();
+      const m = now.getMinutes();
+      const h = now.getHours();
+
+      const secDeg = s * 6;
+      const minDeg = m * 6 + s * 0.1;
+      const hourDeg = (h % 12) * 30 + m * 0.5;
+
+      secondsEl.style.transform = `translateX(-50%) rotate(${secDeg}deg)`;
+      minutesEl.style.transform = `translateX(-50%) rotate(${minDeg}deg)`;
+      hoursEl.style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
+
+      const hh = String(h).padStart(2,"0");
+      const mm = String(m).padStart(2,"0");
+      const ss = String(s).padStart(2,"0");
+      timeLabel.textContent = `${hh}:${mm}:${ss}`;
+
+      highlightCurrent(now);
+    }
+
+    tick();
+    setInterval(tick, 200);
+  }
+
+  clockRotation();
+</script>
+</body>
+</html>
